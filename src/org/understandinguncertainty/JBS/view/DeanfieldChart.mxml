@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			  xmlns:s="library://ns.adobe.com/flex/spark" 
+			  xmlns:mx="library://ns.adobe.com/flex/halo"
+			  horizontalAlign="center"
+			  xmlns:ns="library://ns.adobe.com/flex/mx" xmlns:view="org.understandinguncertainty.JBS.view.*">
+
+
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<s:SolidColor id="goodFill" color="0x44dd44" alpha="1.0"/>
+		<s:SolidColor id="deadFill" color="0x3FBDFF" alpha="1.0"/>
+		<s:SolidColor id="badFill" color="0xff6688" alpha="1.0"/>
+		<s:SolidColor id="betterFill" color="0xffCC00" alpha="1.0"/>
+		<s:SolidColor id="gainFill" color="0xffCC00" alpha="0.3"/>
+		<s:SolidColor id="white" color="0xffffff" alpha="1"/>
+		<s:SolidColor id="green" color="0x008800" alpha="0.1"/>
+		<s:SolidColor id="black" color="0x000000" alpha="1"/>
+		<s:SolidColorStroke id="stroke" color="0" alpha="0.4" weight="2"/>
+		<s:SolidColorStroke id="noStroke" color="0" alpha="0"/>
+		<s:SolidColorStroke id="gainStroke" color="0xffffff" alpha="0.5"/>
+		
+		<fx:String id="ttAge">@Resource(bundle='JBS',key='chart.tooltip.Age')</fx:String>
+		<fx:String id="ttCVRisk">@Resource(bundle='JBS',key='chart.tooltip.cvRisk')</fx:String>
+		<fx:String id="ttCVBetter">@Resource(bundle='JBS',key='chart.tooltip.cvBetter')</fx:String>
+		<fx:String id="ttAll">@Resource(bundle='JBS',key='chart.tooltip.all')</fx:String>
+
+		<s:Group id="gainLabel">
+			<s:Rect width="100%" height="100%" radiusX="7" fill="{gainFill}" stroke="{gainStroke}"/>
+			<s:VGroup horizontalCenter="0" horizontalAlign="center"
+					  paddingBottom="10" paddingLeft="10" paddingRight="10" paddingTop="10">
+				<s:Label text="Average gain"/>
+				<s:Label id="yearGain" text="0" fontSize="16"/>
+				<s:Label text="heart attack or stroke" />
+				<s:Label text="free years"/>
+			</s:VGroup>
+		</s:Group> 
+		
+		<s:VGroup id="meanAgeText" horizontalAlign="center" alpha="0.6">
+			<s:RichText textAlign="center" fontSize="14" >
+				<s:textFlow>
+					<s:TextFlow>
+						<s:p>Average survival free of</s:p>
+						<s:p>heart attack or stroke</s:p>
+						<s:p fontSize="18">{meanAge.toPrecision(3)} years</s:p>
+					</s:TextFlow>
+				</s:textFlow>
+			</s:RichText>
+			<s:Group>			
+				<s:Path data="M 35.09 0.03 L 17.55 30.40 0.01 0.03 Z " height="14.102" width="16.692" x="0" y="0">
+					<s:fill>
+						<s:SolidColor color="#000000"/>
+					</s:fill>
+				</s:Path>
+			</s:Group>
+		</s:VGroup>
+	
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import flashx.textLayout.formats.TextAlign;
+			
+			import mx.charts.ChartItem;
+			import mx.charts.HitData;
+			import mx.charts.chartClasses.IAxisRenderer;
+			import mx.collections.ArrayCollection;
+			
+			import org.understandinguncertainty.JBS.model.RunModel;
+			import org.understandinguncertainty.JBS.signals.ModelUpdatedSignal;
+			import org.understandinguncertainty.JBS.signals.UpdateModelSignal;
+			
+			import spark.components.Group;
+			import spark.components.RichText;
+			
+			private const interventionColour:uint = 0x000000;
+			private const targetColour:uint = 0xcc0000;
+			
+			
+			[Bindable]
+			[Inject]
+			public var runModel:RunModel;
+			
+			[Bindable]
+			public var gainedLost:String;
+			
+			[Bindable]
+			public var meanAge:Number;
+			
+			[Bindable]
+			public var meanYears:Number;
+						
+			[Inject]
+			public var updateModelSignal:UpdateModelSignal;
+			
+			[Inject]
+			public var modelUpdatedSignal:ModelUpdatedSignal;
+			
+						
+			public function addListeners():void
+			{
+				updateModelSignal.add(update);
+				modelUpdatedSignal.add(update2);
+			}
+			
+			public function removeListeners():void
+			{
+				updateModelSignal.remove(update);
+				modelUpdatedSignal.remove(update2);
+			}
+			
+ 			private function update():void
+			{
+				
+				if(runModel) {
+					runModel.invalid = true;
+					invalidateProperties();
+				}
+				
+			}
+			
+			private function update2():void
+			{
+				if(runModel.yearGain > 0) {
+					yearGain.text = runModel.yearGain.toPrecision(2);
+					gainedLost = "gained"
+				}
+				else {
+					yearGain.text = (-runModel.yearGain).toPrecision(2);
+					gainedLost = "lost"					
+				}
+				
+				meanAge = runModel.meanAge;
+				//meanYears = Math.round(meanAge);
+				
+			}
+ 						
+			private function interventionChange(event:Event):void {
+				invalidateProperties();
+			}
+			
+			override protected function commitProperties() : void
+			{
+				super.commitProperties();
+				if(runModel) {
+					runModel.commitProperties();
+					areaChart.dataProvider = runModel.getDeanfield();
+					ageAxis.minimum = runModel.minimumAge;
+					ageAxis.maximum = maxAge.value;
+					annotate();
+				}
+			}
+			
+			private function annotate():void
+			{
+				dataCanvas.clear();
+				dataCanvas.removeAllChildren();
+				
+				dataCanvas.lineStyle(2, interventionColour, 0.6);
+				
+				var intAge:int = runModel.interventionAge; //interventionSlider.value;
+				areaChart.validateNow();					// so chanceAxis scales are correct here
+				dataCanvas.moveTo(intAge,chanceAxis.minimum);
+				dataCanvas.lineTo(intAge,chanceAxis.maximum);
+				
+				var intLabel:RichText = new RichText();
+				intLabel.text = "Intervention Start Age";
+				intLabel.setStyle("fontSize", 14);
+				intLabel.setStyle("color", interventionColour);
+				intLabel.alpha = 0.6;
+				intLabel.rotation = -90;
+				dataCanvas.addDataChild(intLabel, intAge+0.2, (chanceAxis.minimum + chanceAxis.maximum)/4);
+				
+				// Add mean survival age 
+				dataCanvas.addDataChild(meanAgeText,
+						null,
+						null, 
+						null,
+						0,
+						meanAge);
+				
+				if(runModel.yearGain > 0) {
+					var labelAge:int = Math.round((runModel.interventionAge+2*maxAge.value)/3);
+					var dp:ArrayCollection = areaChart.dataProvider as ArrayCollection;
+					var item:Object = dp.getItemAt(labelAge - runModel.minimumAge);
+					var labelChance:Number = (item.green + item.yellow)/2;
+					dataCanvas.addDataChild(gainLabel,null,null,null,labelChance,labelAge, null);
+				}
+				
+				
+			}
+			
+	
+			private function dataTipFunction(hitData:HitData):String
+			{
+				var item:Object = hitData.item;
+				var color:int = hitData.contextColor;
+				var s:String = "Age: " + item.age + "\n";
+				switch(hitData.contextColor) {
+					case goodFill.color:
+						s += "% Chance of Survival with no\nHeart Attack or Stroke: " + (item.green.toFixed(0)) + "%";
+						break;
+					case badFill.color:
+						s += "Cumulative % Risk of Heart\nAttack or Stroke: " + (item.redOnly.toFixed(0)) + "%";
+						break;
+					case betterFill.color:
+						s += "Improvement due to intervention: " +  Math.max(0, item.yellowOnly).toFixed(0) + "%";
+				}
+
+				return s;
+			}
+			
+			private function addPercent(rounded:Number, oldValue:Number, axis:LinearAxis):String
+			{
+				return rounded.toFixed(0).replace(/\./,"") + "%";
+			}
+		
+
+		]]>
+	</fx:Script>
+	
+	<s:VGroup horizontalAlign="center">
+		<s:Label fontSize="18" text="@Resource(bundle='JBS',key='chart.title')"/> 
+		<s:Group id="chartGroup" width="500" height="350">
+			<s:VGroup width="100%" height="100%" gap="1">
+					
+				<s:HGroup width="100%" top="5" right="5" horizontalAlign="right">
+					<ns:Legend dataProvider="{areaChart}" direction="vertical" styleName="deanfield" />
+				</s:HGroup>
+				
+				<ns:AreaChart id="areaChart" height="100%" width="100%"
+							  paddingLeft="10" paddingRight="5" 
+							  showDataTips="true"
+							  dataTipFunction="{dataTipFunction}"
+							  type="overlaid"
+							  dataProvider="{runModel.getDeanfield()}" 
+							  fontSize="14">
+					
+					<ns:backgroundElements>
+						<ns:GridLines gridDirection="both" verticalShowOrigin="true" horizontalShowOrigin="true" verticalOriginStroke="{stroke}" horizontalOriginStroke="{stroke}"/>
+					</ns:backgroundElements>
+					
+					<ns:annotationElements>
+						<ns:CartesianDataCanvas id="dataCanvas">
+						</ns:CartesianDataCanvas>
+					</ns:annotationElements>
+					
+					<ns:horizontalAxis>
+						<ns:LinearAxis id="ageAxis" 
+									   displayName="@Resource(bundle='JBS',key='chart.xaxis')" 
+									   minimum="{runModel.minimumAge}" maximum="{maxAge.value}"/>
+					</ns:horizontalAxis>
+					
+					<ns:verticalAxis>
+						<ns:LinearAxis id="chanceAxis"
+									   displayName="@Resource(bundle='JBS',key='chart.yaxis')" 
+									   title="@Resource(bundle='JBS',key='chart.yaxis')"
+									   labelFunction="addPercent"
+									   minimum = "{100-maxChance.value}"
+									   maximumLabelPrecision="0">
+						</ns:LinearAxis>
+					</ns:verticalAxis>
+					
+					<ns:series>
+						<ns:AreaSeries yField="yellow" xField="age" form="curve" displayName="@Resource(bundle='JBS',key='chart.better')" areaStroke="{stroke}" areaFill="{betterFill}"/>
+						<ns:AreaSeries yField="green" xField="age" form="curve" displayName="@Resource(bundle='JBS',key='chart.good')" areaStroke="{stroke}" areaFill="{goodFill}"/>
+					</ns:series>
+				</ns:AreaChart>
+				
+				<s:HGroup width="100%" horizontalAlign="center">
+					<s:Label text="@Resource(bundle='JBS',key='chart.xaxis')" />
+				</s:HGroup>
+			</s:VGroup>
+				
+			<s:VGroup width="100%" verticalAlign="top" left="0" top="60">
+				<s:VSlider id="maxChance" height="50" value="100"  showDataTip="false" toolTip="Adjust Scale"
+						   minimum="50" maximum="100" stepSize="10" change="/*runModel.chanceClamp=maxChance.value; update()*/"/>
+			</s:VGroup>
+
+			<s:HGroup width="100%" horizontalAlign="right" right="10" bottom="7" >
+				<s:HSlider id="maxAge" width="50" value="90" showDataTip="false" toolTip="Adjust Scale"
+						   minimum="{runModel.minimumAge + runModel.targetInterval}" maximum="100" change="update()"/>
+			</s:HGroup>
+			
+		</s:Group>
+		
+		<view:AgeSettings currentState="excludeTargetAge" width="80%"/>
+		
+			
+	</s:VGroup>
+	
+</s:VGroup>

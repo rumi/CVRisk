@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009" 
+						xmlns:s="library://ns.adobe.com/flex/spark" 
+						xmlns:mx="library://ns.adobe.com/flex/halo"
+						xmlns:components="org.maths.components.*"
+						xmlns:view="org.understandinguncertainty.JBS.view.*"
+						addedToStage="setup()"
+>
+
+	<fx:Script>
+		<![CDATA[
+			import org.understandinguncertainty.JBS.model.RunModel;
+			import org.understandinguncertainty.JBS.signals.ClearInterventionsSignal;
+			import org.understandinguncertainty.JBS.signals.InterventionEditedSignal;
+			import org.understandinguncertainty.JBS.signals.InterventionResetSignal;
+			import org.understandinguncertainty.JBS.signals.UpdateModelSignal;
+					
+			[Bindable]
+			[Inject]
+			public var runModel:RunModel;
+			
+			[Inject]
+			public var updateModelSignal:UpdateModelSignal;
+			
+			[Bindable]
+			[Inject]
+			public var interventionEditedSignal:InterventionEditedSignal;
+
+			[Bindable]
+			[Inject]
+			public var interventionResetSignal:InterventionResetSignal;
+						
+			[Bindable]
+			public var minAge:int;
+			
+			[Bindable]
+			public var maxAge:int;
+			
+			public function setup():void
+			{
+				interventionEditedSignal.dispatch("sbp");
+				interventionEditedSignal.dispatch("sbp_treatedCheck");
+				interventionEditedSignal.dispatch("tc");
+				interventionEditedSignal.dispatch("hdlc");
+				interventionEditedSignal.dispatch("smokerCheck");
+				interventionEditedSignal.dispatch("exerciseCheck");
+			}
+			
+			public function update():void
+			{
+				invalidateDisplayList();
+			}
+			
+			public function get conversionFactor():Number 
+			{
+				return runModel.mmol ? 1 : runModel.mmolConvert;
+			}
+						
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->			
+	</fx:Declarations>
+	
+	<s:HGroup id="labelGroup" gap="0" verticalAlign="middle">
+		
+		<s:Group width="20"/>
+		
+		<s:Label id="title" 
+				 text="Interventions" fontSize="16" />
+		
+	</s:HGroup>
+	
+	<s:VGroup id="container" gap="4" paddingLeft="20" paddingRight="20" paddingTop="30" paddingBottom="15" >
+			
+		<s:Group height="10"/>
+		
+		<view:InterventionStepper
+			id="sbp" 
+			label="@Resource(bundle='JBS', key='sideBar2.SBP')" 
+			original="100" value="100" 
+			sigma="@Resource(bundle='JBS', key='sigma.SBP')"
+			minimum="70"
+			maximum="210"
+			resetSignal="{interventionResetSignal}"
+			editSignal="{interventionEditedSignal}"
+			width="100%"
+			/>
+		
+		<view:InterventionCheck 
+			id="sbp_treatedCheck" 
+			label="@Resource(bundle='JBS', key='sideBar2.sbpTreated')"
+			selected="false"
+			resetSignal="{interventionResetSignal}"
+			editSignal="{interventionEditedSignal}"
+			width="100%"
+			/>
+		
+		<s:Group height="10"/>
+		
+		<view:InterventionStepper 
+			id="tc" 
+			label="@Resource(bundle='JBS', key='sideBar2.totalCholesterol')"
+			original="100" value="100" 
+			minimum="{1 * conversionFactor}"
+			maximum="{20 * conversionFactor}"
+			sigma="@Resource(bundle='JBS', key='sigma.totalCholesterol')"
+			resetSignal="{interventionResetSignal}"
+			editSignal="{interventionEditedSignal}"
+			width="100%"
+			/>
+		
+		<view:InterventionStepper 
+			id="hdlc" 
+			label="@Resource(bundle='JBS', key='sideBar2.hdlCholesterol')" 
+			original="100" value="100"
+			minimum="{0.1 * conversionFactor}"
+			maximum="{12 * conversionFactor}"
+			sigma="@Resource(bundle='JBS', key='sigma.hdlCholesterol')"
+			resetSignal="{interventionResetSignal}"
+			editSignal="{interventionEditedSignal}"
+			width="100%"
+			/>
+		
+		<s:Group height="10"/>
+<!--
+		<view:InterventionStepper 
+			id="weight" 
+			label="@Resource(bundle='JBS', key='sideBar2.weight')"
+			original="100" value="100" 
+			sigma="@Resource(bundle='JBS', key='sigma.weight')"
+			resetSignal="{interventionResetSignal}"
+			editSignal="{interventionEditedSignal}"
+			width="100%"
+			/>
+-->		
+		<view:InterventionCheck 
+			id="smokerCheck" 
+			label="@Resource(bundle='JBS', key='sideBar2.smoker')" 
+			selected="false"
+			resetSignal="{interventionResetSignal}"
+			editSignal="{interventionEditedSignal}"
+			width="100%"
+			/>
+		
+		<view:InterventionCheck 
+			id="exerciseCheck" 
+			label="@Resource(bundle='JBS', key='sideBar2.active')" 
+			selected="false"
+			resetSignal="{interventionResetSignal}"
+			editSignal="{interventionEditedSignal}"
+			width="100%"
+			/>
+
+	</s:VGroup>
+			
+		
+</s:VGroup>

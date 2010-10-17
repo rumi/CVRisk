@@ -1,0 +1,25 @@
+<personalData>
+  <townsend>0</townsend>
+  <fiveaday>true</fiveaday>
+  <atrialFibrillation>false</atrialFibrillation>
+  <height_m>1.7</height_m>
+  <moderateAlcohol>true</moderateAlcohol>
+  <dateOfBirth>16/8/1953</dateOfBirth>
+  <quitSmoker>false</quitSmoker>
+  <totalCholesterol_mmol_L>5.79</totalCholesterol_mmol_L>
+  <rheumatoidArthritis>false</rheumatoidArthritis>
+  <yearOfBirth>1953</yearOfBirth>
+  <hdlCholesterol_mmol_L>1.4</hdlCholesterol_mmol_L>
+  <active>true</active>
+  <systolicBloodPressure>145</systolicBloodPressure>
+  <postCode/>
+  <gender>male</gender>
+  <weight_kg>65</weight_kg>
+  <nonSmoker>true</nonSmoker>
+  <SBPTreated>false</SBPTreated>
+  <ethnicGroup/>
+  <chronicRenalDisease>false</chronicRenalDisease>
+  <relativeHadCVD>false</relativeHadCVD>
+  <diabetic>false</diabetic>
+  <age>56</age>
+</personalData>

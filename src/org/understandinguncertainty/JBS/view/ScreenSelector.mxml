@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		  xmlns:s="library://ns.adobe.com/flex/spark" 
+		  xmlns:mx="library://ns.adobe.com/flex/halo"
+		  xmlns:ns="library://ns.adobe.com/flex/mx">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.graphics.SolidColor;
+			
+			import org.understandinguncertainty.JBS.model.vo.WidthHeightMeasurement;
+			import org.understandinguncertainty.JBS.signals.ProfileCommitSignal;
+			import org.understandinguncertainty.JBS.signals.ProfileValidSignal;
+			import org.understandinguncertainty.JBS.signals.ScreenChangedSignal;
+			import org.understandinguncertainty.JBS.signals.ScreenSelectorMeasured;
+			import org.understandinguncertainty.JBS.signals.UpdateModelSignal;
+
+			[Inject]
+			public var profileValidSignal:ProfileValidSignal;
+			
+			[Inject]
+			public var updateModelSignal:UpdateModelSignal;
+			
+			[Inject]
+			public var screenChangedSignal:ScreenChangedSignal;
+			
+			[Inject]
+			public var profileCommitSignal:ProfileCommitSignal;
+			
+			[Inject]
+			public var screenSelectorMeasured:ScreenSelectorMeasured;
+			
+			[Bindable]
+			private var profileValid:Boolean = false;
+			
+			[Bindable]
+			public var fill:SolidColor;
+			
+			[Bindable]
+			private var buttonWidth:int = 300;//100;
+			
+			[Bindable]
+			private var buttonHeight:int = 180;//60;
+			
+			public var mainPanel:MainPanel;
+			
+ 			public function addListeners():void
+			{
+				profileValidSignal.add(enableCheck);
+			}
+			
+			public function removeListeners():void
+			{
+				profileValidSignal.remove(enableCheck);
+			}
+			
+			private function enableCheck(profileValid:Boolean):void
+			{
+				this.profileValid = profileValid;
+			}
+			
+			[Bindable]
+			public function get selectedScreen():int
+			{
+				return mainPanel.selectedIndex;
+			}
+			public function set selectedScreen(index:int):void
+			{
+				if(mainPanel.selectedIndex == 0) {
+					profileCommitSignal.dispatch();
+				}
+				
+				if(index != mainPanel.selectedIndex) {
+					mainPanel.selectedIndex = index;
+					screenChangedSignal.dispatch(index);
+				}
+				
+				sidePanelVisible = (index != 0);
+			}
+			
+			[Bindable]
+			public var sidePanelVisible:Boolean = false;
+			
+			public function gotoScreen1():void
+			{
+				mainPanel.selectedIndex = 1;
+				sidePanelVisible = true;
+				screenChangedSignal.dispatch(1);	
+			}
+			
+			override protected function measure():void
+			{
+				super.measure();
+				
+				if(screenSelectorMeasured == null)
+					return;
+				
+				screenSelectorMeasured.dispatch(new WidthHeightMeasurement(this, measuredWidth, measuredHeight));
+			}
+			
+		
+		]]>
+	</fx:Script>
+	
+	<s:Rect radiusX="15" fill="{fill}" />
+	<s:HGroup gap="10" id="thumbnails" paddingLeft="10" paddingRight="10">
+		
+		<s:VGroup gap="0" horizontalAlign="center">
+			<s:Label text="@Resource(bundle='JBS',key='sideBar1.profile')" fontSize="36"/>
+			<ns:Button icon="@Embed('/assets/profileThumbnail.png')" 
+					   width="{buttonWidth}" height="{buttonHeight}"
+					   click="selectedScreen = 0"/>
+		</s:VGroup>
+		<s:VGroup gap="0" horizontalAlign="center">
+			<s:Label text="@Resource(bundle='JBS',key='sideBar1.heartAge')"  fontSize="36" alpha="{profileValid ? 1 : 0.3}"/>
+			<ns:Button icon="@Embed('/assets/heartAgeThumbnail2.png')" 
+					   width="{buttonWidth}" height="{buttonHeight}"
+					   enabled="{profileValid}"
+					   alpha="{profileValid ? 1 : 0.3}"
+					   click="selectedScreen = 1"/>
+		</s:VGroup>
+
+		<s:VGroup gap="0" horizontalAlign="center">
+			<s:Label text="@Resource(bundle='JBS',key='sideBar1.deanfield')"  fontSize="36" alpha="{profileValid ? 1 : 0.3}"/>
+			<ns:Button icon="@Embed('/assets/deanfieldThumbnail.png')" 
+					   width="{buttonWidth}" height="{buttonHeight}"
+					   enabled="{profileValid}"
+					   alpha="{profileValid ? 1 : 0.3}"
+					   click="selectedScreen = 3"/>
+		</s:VGroup>
+		
+		<s:VGroup gap="0" horizontalAlign="center">
+			<s:Label text="@Resource(bundle='JBS',key='sideBar1.outcomes')"  fontSize="36" alpha="{profileValid ? 1 : 0.3}"/>
+			<ns:Button icon="@Embed('/assets/outcomesThumbnail.png')" 
+					   width="{buttonWidth}" height="{buttonHeight}"
+					   enabled="{profileValid}"
+					   alpha="{profileValid ? 1 : 0.3}"
+					   click="selectedScreen = 4"/>
+		</s:VGroup>
+		<s:VGroup gap="0" horizontalAlign="center">
+			<s:Label text="@Resource(bundle='JBS',key='sideBar1.compare')"  fontSize="36" alpha="{profileValid ? 1 : 0.3}"/>
+			<ns:Button icon="@Embed('/assets/compareThumbnail.png')" 
+					   width="{buttonWidth}" height="{buttonHeight}"
+					   enabled="{profileValid}"
+					   alpha="{profileValid ? 1 : 0.3}"
+					   click="selectedScreen = 5"/>
+		</s:VGroup>
+	</s:HGroup>
+
+</s:Group>

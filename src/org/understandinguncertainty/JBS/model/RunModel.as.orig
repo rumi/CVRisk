@@ -1,0 +1,565 @@
+package org.understandinguncertainty.JBS.model
+{
+	import mx.collections.ArrayCollection;
+	import mx.resources.IResourceManager;
+	
+	import org.hamcrest.mxml.collection.Array;
+	import org.robotlegs.mvcs.Actor;
+	import org.understandinguncertainty.JBS.framingham.model.FemaleParameters;
+	import org.understandinguncertainty.JBS.framingham.model.FraminghamParameters;
+	import org.understandinguncertainty.JBS.framingham.model.MaleParameters;
+	import org.understandinguncertainty.JBS.model.vo.BetasVO;
+	import org.understandinguncertainty.JBS.qrisk2.model.QRiskParameters;
+	import org.understandinguncertainty.JBS.signals.ModelChoiceChanged;
+	import org.understandinguncertainty.JBS.signals.ModelUpdatedSignal;
+	import org.understandinguncertainty.JBS.signals.UpdateModelSignal;
+	import org.understandinguncertainty.personal.VariableList;
+	import org.understandinguncertainty.personal.types.BooleanPersonalVariable;
+
+	[ResourceBundle("JBS")]
+	public class RunModel extends Actor implements ICardioModel
+	{
+		
+		public const mmolConvert:Number = 38.7;
+		public var mmol:Boolean = true;
+		
+		[Inject]
+		public var resourceManager:IResourceManager;
+
+		[Inject(name="userProfile")]
+		public var userProfile:UserModel;
+		
+		[Inject(name="interventionProfile")]
+		public var interventionProfile:UserModel;
+		
+		[Inject]
+		public var modelUpdatedSignal:ModelUpdatedSignal;
+				
+		/**
+		 * if set, will cause a recalculation of the model before it is next used. 
+		 */
+		public var invalid:Boolean = true;
+		
+		public var selectedModel:String = "framingham";
+		
+		private var _interventionAge:int = 0;
+		[Bindable]
+		public function get interventionAge():int
+		{
+			return _interventionAge;
+		}
+		public function set interventionAge(age:int):void
+		{
+			_interventionAge = age;
+			invalid = true;
+		}
+		
+		private var _targetInterval:int = 10;
+		[Bindable]
+		public function get targetInterval():int
+		{
+			return _targetInterval;
+		}
+		public function set targetInterval(age:int):void
+		{
+			_targetInterval = age;
+			invalid = true;
+		}
+		
+		private var _minimumAge:int = 0;
+		[Bindable]
+		public function get minimumAge():int
+		{
+			return _minimumAge;
+		}
+		public function set minimumAge(age:int):void
+		{
+			_minimumAge = age;
+			invalid = true;
+		}
+		
+		private var _maximumAge:int = 0;
+		[Bindable]
+		public function get maximumAge():int
+		{
+			return _maximumAge;
+		}
+		public function set maximumAge(age:int):void
+		{
+			_maximumAge = age;
+			invalid = true;
+		}
+		
+		private var _modelOther:Boolean = true;
+		[Bindable]
+		/**
+		 * 
+		 * @return whether we model other causes of death
+		 * 
+		 */
+		public function get modelOther():Boolean
+		{
+			return _modelOther;
+		}
+		public function set modelOther(b:Boolean):void
+		{
+			_modelOther = b;
+			invalid = true;
+		}
+		
+		private var _showOther:Boolean = true;
+		[Bindable]
+		public function get showOther():Boolean
+		{
+			return _showOther;
+		}
+		public function set showOther(b:Boolean):void
+		{
+			_showOther = b;
+			invalid = true;
+		}
+		
+		private var _maleParams:MaleParameters;
+		private function get maleParameters():MaleParameters
+		{
+			return _maleParams || new MaleParameters();
+		}
+		
+		private var _femaleParams:FemaleParameters;
+		private function get femaleParameters():FemaleParameters
+		{
+			return _femaleParams || new FemaleParameters();
+		}
+		
+		private function get framinghamParams():FraminghamParameters
+		{
+			return (gender == "male") ? maleParameters : femaleParameters;
+		}
+		
+		public function get gender():String 
+		{
+			return userProfile.variableList.gender.toString();
+		}
+		
+		public function get age():int {
+			return userProfile.variableList.dateOfBirth.getAge();
+		}
+		
+		private var _h:Number;
+		[Bindable]
+		public function get heartAge():Number
+		{
+			return _h;
+		}
+		public function set heartAge(i:Number):void
+		{
+			_h = i; 
+			var hint:int = Math.floor(_h);
+			var hmonth:int = Math.round((_h - hint)*12);
+			heartAgeText = hint + " years"; /* + hmonth + " months"; */
+		}
+		
+		[Bindable]
+		public var heartAgeText:String = "";
+		
+		private var sum_e:Number = 0;
+		private var sum_e_int:Number = 0;
+		
+		//private var g:Number = 0;
+		public function get yearGain():Number {
+			return (sum_e_int - sum_e)/100;
+		}
+		
+		public function get meanAge():Number {
+			return _minimumAge + sum_e_int/100;
+		}
+		
+		public function commitProperties():void {
+			_maximumAge = Math.min(100, framinghamParams.b.length-1);
+			if(age == 0)
+				return;
+			_minimumAge = age;
+			if(_interventionAge < _minimumAge)
+				_interventionAge = _minimumAge;
+
+			var series:Array= [];
+			var series_star:Array= [];
+			var series_deanfield:Array = [];
+
+			var a:Number;
+			var a_int:Number;
+			var a_gp:Number
+			var b:Number;
+			var b_int:Number;
+			var c:Number;
+			var c_int:Number;
+			var c_gp:Number;
+			var d:Number;
+			var d_int:Number;
+			var d_gp:Number;
+			var e:Number = 100;
+			var e_int:Number = 100;
+			var e_gp:Number = 100;
+			var f:Number = 0;
+			var f_int:Number = 0;
+			var f_gp:Number = 0;
+			var m:Number = 0;
+			var m_int:Number = 0;
+			var m_gp:Number = 0;
+			var profile_int:VariableList = interventionProfile.variableList;
+			var nonSmoker:Boolean = profile_int.nonSmoker.value as Boolean;
+			var quitSmoker:Boolean = profile_int.quitSmoker.value as Boolean;
+
+			sum_e = 0;
+			sum_e_int = 0;
+			
+			for(var i:int=age; i <= _maximumAge; i++) {
+				
+				var calculatedParams:CalculatedParams 
+					= (selectedModel == "framingham") ? calculateFramingham(i) : calculateQRisk(i);
+					
+				a = calculatedParams.a;
+				a_gp = calculatedParams.genPop_a;
+				
+				if(i == age)
+					heartAge = calculatedParams.h;
+				if(i <= interventionAge) {
+					a_int = a;
+				}
+				else {
+					a_int = calculatedParams.a_int;					
+				}
+				
+				b = framinghamParams.b[i];
+				b_int = nonSmoker ? (quitSmoker ? 0.65*1.46*b : 0.88*b) : 1.46*b;
+				
+				c = e*b;
+				c_int = e_int*b_int;
+				c_gp = e_gp*b;
+				
+				d = e*a;
+				d_int = e_int*a_int;
+				d_gp = e_gp*a_gp;
+				
+				e -= (c+d);
+				e_int -= (c_int+d_int);
+				e_gp -= (c_gp + d_gp);
+				sum_e_int += e_int;
+				sum_e += e;
+				
+				f += d;
+				f_int += d_int;
+				f_gp += d_gp;
+				
+				m += c;
+				m_int += c_int;
+				m_gp += c_gp;
+				
+//				trac("age, ",i,",",a_int,",",b,",",c_int,",",d_int,",",e_int,",",f_int,",",m_int);
+//				trac("int, ",i,",",a,",",b,",",c,",",d,",",e,",",f,",",m);
+									
+				// deanfield
+				var yellow:Number = f+m - (m_int+f_int);
+				var greenUnclamped:Number = 100 - Math.max(m + f, m_int + f_int);
+				if(greenUnclamped < 0)
+					yellow = Math.min(0, yellow + greenUnclamped);
+				yellow = Math.max(0,yellow);
+				
+				var green:Number = Math.min(100, Math.max(0, greenUnclamped));
+				var red:Number = f_int;
+				series_deanfield.push({
+					age:		i,
+					green:		green,
+					yellow:		green + yellow,
+					red:		green + yellow + red,					
+
+					yellowOnly:	yellow,
+					redOnly:	red,
+					
+					fdash:		f, 
+					fdash_int:	f_int,
+					mdash:		m,
+					mdash_int:	m_int,
+					f_gp:		f_gp
+				});
+				
+ 			}
+
+//			_series = new ArrayCollection(series);
+			_seriesDeanfield = new ArrayCollection(series_deanfield);
+			invalid = false;
+			
+			modelUpdatedSignal.dispatch();
+		}
+	
+//		private var _series:ArrayCollection;
+		private var _seriesDeanfield:ArrayCollection; // Inverted, green with no blue
+		
+		private function clamp(n:Number):Number 
+		{
+			return Math.max(0,Math.min(n, chanceClamp));
+		}
+		
+		public var chanceClamp:Number = 100;
+		
+/*
+		public function getOutlook():ArrayCollection
+		{
+			if(invalid)
+				commitProperties();
+			return _series;
+		}
+*/		
+		public function getDeanfield():ArrayCollection
+		{
+			if(invalid)
+				commitProperties();
+			return _seriesDeanfield;	
+		}
+		
+		private function calculateFramingham(i:int):CalculatedParams
+		{
+			
+			var p:FraminghamParameters = framinghamParams;
+			var beta:BetasVO = framinghamParams.beta;
+			var q:BetasVO = framinghamParams.q;
+			var profile:VariableList = userProfile.variableList;
+			var profile_int:VariableList = interventionProfile.variableList;
+
+			var ageBetaX:Number = Math.log(i) * beta.age;
+			
+			var tCBetaX:Number = Math.log(mmolConvert*(profile.totalCholesterol_mmol_L.value as Number)) * beta.totalCholesterol_mmol_L;
+			var tCBetaX_1:Number = Math.log(mmolConvert*(profile_int.totalCholesterol_mmol_L.value as Number)) * beta.totalCholesterol_mmol_L;
+			var tCBetaX_int:Number = (1-q.totalCholesterol_mmol_L)*tCBetaX + q.totalCholesterol_mmol_L*tCBetaX_1;
+			
+			var hdlBetaX:Number = Math.log(mmolConvert*(profile.hdlCholesterol_mmol_L.value as Number)) * beta.hdlCholesterol_mmol_L;
+			var hdlBetaX_1:Number = Math.log(mmolConvert*(profile_int.hdlCholesterol_mmol_L.value as Number)) * beta.hdlCholesterol_mmol_L;
+			var hdlBetaX_int:Number = (1-q.hdlCholesterol_mmol_L)*hdlBetaX + q.hdlCholesterol_mmol_L*hdlBetaX_1;
+
+			// Note that the SBP may change AND/OR it may be treated during the intervention, so we calculate the effect before
+			// and after taking both of these into account. Then we interpolate.
+			var SBPTreated:Boolean = (profile.SBPTreated.value as Boolean);
+			var sbpBetaX:Number = Math.log(profile.systolicBloodPressure.value as Number);
+			if(SBPTreated)
+				sbpBetaX *= beta.SBPTreated;
+			else
+				sbpBetaX *= beta.systolicBloodPressure;
+
+			SBPTreated = (profile_int.SBPTreated.value as Boolean);
+			var sbpBetaX_int:Number = Math.log(profile_int.systolicBloodPressure.value as Number);
+			if(SBPTreated)
+				sbpBetaX_int *= beta.SBPTreated;
+			else
+				sbpBetaX_int *= beta.systolicBloodPressure;
+			
+			// Now interpolate
+			var smokerBetaX:Number = (profile.nonSmoker.value as Boolean) ? 0 : beta.smoker;
+			var smokerBetaX_int:Number;
+			if(profile_int.nonSmoker.value as Boolean) {
+				smokerBetaX_int = (1 - q.smoker)*smokerBetaX;
+			}
+			else {
+				smokerBetaX_int = (1 - q.smoker)*smokerBetaX + q.smoker*beta.smoker;
+			}
+			
+			var diabeticBetaX:Number = (profile.diabetic.value as Boolean) ? beta.diabetic : 0;
+			var diabeticBetaX_int:Number = (1 - q.diabetic)*diabeticBetaX
+				+ ((profile_int.diabetic.value as Boolean) ? (q.diabetic * beta.diabetic) : 0);
+			
+			var sumBetaX:Number = ageBetaX + tCBetaX + hdlBetaX + sbpBetaX + smokerBetaX + diabeticBetaX;
+			var sumBetaX_int:Number = ageBetaX + tCBetaX_int + hdlBetaX_int + sbpBetaX_int + smokerBetaX_int + diabeticBetaX_int;
+			
+			var lhr:Number = sumBetaX - p.averageHazard;
+			var lhr_int:Number = sumBetaX_int - p.averageHazard;
+
+			// heartAge
+			var h:Number
+			if(i == age)
+				h = Math.exp(lhr/beta.age + p.xbar.age);
+
+			//trace("fram age: "+i+" a: "+lhr);
+			
+			return new CalculatedParams(p.a * Math.exp(lhr), p.a*Math.exp(lhr_int), h, p.a*Math.exp(ageBetaX-p.xbar.age*p.beta.age));
+		}
+
+/*----- QRisk ------*/
+		private var _maleQParams:QRiskParameters;
+		private function get maleQParameters():QRiskParameters
+		{
+			return _maleQParams || new org.understandinguncertainty.JBS.qrisk2.model.MaleParameters();
+		}
+		
+		private var _femaleQParams:QRiskParameters;
+		private function get femaleQParameters():QRiskParameters
+		{
+			return _femaleQParams || new org.understandinguncertainty.JBS.qrisk2.model.FemaleParameters();
+		}
+		
+		private function get qRiskParams():QRiskParameters
+		{
+			return (gender == "male") ? maleQParameters : femaleQParameters;
+		}
+		
+
+		private function calculateQRisk(i:int):CalculatedParams
+		{
+			var p:QRiskParameters = qRiskParams;
+			var profile:VariableList = userProfile.variableList;
+			var profile_int:VariableList = interventionProfile.variableList;
+			var profile_genpop:VariableList = genPopProfile;
+			
+			
+			/* Applying the fractional polynomial transforms */
+<<<<<<< HEAD
+			/* (which includes scaling)                      */
+			var lhr:Number = sumProfile(profile, i);
+			//trace("qrisk age: "+i+" a: "+lhr);
+			var lhr_int:Number = sumProfile(profile_int, i);
+			var lhr_genpop:Number = sumProfile(profile_genpop, i);
+
+			return new CalculatedParams(lhr, lhr_int, 
+				// h, p.a*Math.exp(lhr_genpop));
+=======
+			/* (which includes scaling)   */
+			var lhr_q:Number = sumProfile(profile, i);
+			var lhr_q_int:Number = sumProfile(profile_int, i);
+			var lhr_q_genpop:Number = sumProfile(profile_genpop, i);
+
+			var s_j:Number = (gender == "male") ? 0.996804893016815 : 0.998114824295044;
+			
+			return new CalculatedParams(1 - Math.pow(s_j, Math.exp(lhr_q)), 1 - Math.pow(s_j, p.a*Math.exp(lhr_q_int)), 
+				// h, p.a*Math.exp(lhr_q_genpop));
+>>>>>>> 3d549b3b7c40415c49444db323f2ac7903af5a64
+				0, 0);
+		}
+
+		private var _genPopProfile:VariableList;
+		private function get genPopProfile():VariableList
+		{
+			if(_genPopProfile != null)
+				return _genPopProfile;
+			
+			_genPopProfile = userProfile.variableList.clone();
+			
+			return _genPopProfile;
+		}
+		
+		
+		private function sumProfile(profile:VariableList, i:int):Number
+		{
+			var p:QRiskParameters = qRiskParams;
+			var xbar:BetasVO = p.xbar;
+			var beta:BetasVO = p.beta;
+			var q:BetasVO = p.q;
+
+			var dage:Number = i;
+			dage=dage/10;
+			
+			/* This is weird - completely different algorithm for male and female! */
+			var age_1:Number;
+			var age_2:Number;
+			var dbmi:Number = profile.bmi;
+			var bmi_1:Number;
+			dbmi=dbmi/10;
+			if(gender == "male") {
+				age_1 = 1/(dage*dage); 			//pow(dage,-2);
+				age_2 = age_1*Math.log(dage);	//pow(dage,-2)*log(dage);
+				bmi_1 = Math.log(dbmi);
+			}
+			else {
+				age_1 = Math.sqrt(dage); //pow(dage,0.5);
+				age_2 = dage*dage;	  	 //pow(dage,-2)*log(dage);
+				bmi_1 = Math.sqrt(dbmi);
+			}
+			
+			/* Centring the continuous variables */
+			age_1 -= xbar.age_1;
+			age_2 -= xbar.age_2;
+			bmi_1 -= xbar.bmi_1;
+			var rati:Number = profile.cholRatio - xbar.rati;
+			var sbp:Number = (profile.systolicBloodPressure.value as Number) - xbar.sbp;
+			var town:Number = (profile.townsend.value as Number) - xbar.town;
+			
+			/* Start of Sum */
+			var a:Number = 0;
+			
+			/* The conditional sums */		
+			a += p.ethRisk[profile.ethnicGroup.value as Number];
+			
+			/* Sum from continuous values */
+			a += age_1 * beta.age_1;
+			a += age_2 * beta.age_2;
+			a += bmi_1 * beta.bmi_1;
+
+			//trace("age_1="+age_1+" age_2="+age_2+" bmi_1="+bmi_1);
+			
+			a += rati * beta.rati;
+			a += sbp * beta.sbp;
+			a += town * beta.town;
+			var snap0:Number = a;
+			
+			/* Sum from boolean values */
+			var b_AF:Number = (profile.atrialFibrillation.value as Boolean) ? 1 : 0;
+			a += b_AF * beta.b_AF;
+			
+			var b_ra:Number = (profile.rheumatoidArthritis.value as Boolean) ? 1 : 0;
+			a += b_ra * beta.b_ra;
+			
+			var b_renal:Number = (profile.chronicRenalDisease as Boolean) ? 1 : 0;
+			a += b_renal * beta.b_renal;
+			
+			var b_treatedhyp:Number = (profile.SBPTreated as Boolean) ? 1 : 0;
+			a += b_treatedhyp * beta.b_treatedhyp;
+			
+			var b_type2:Number = (profile.diabetic as Boolean) ? 1 : 0;
+			a += b_type2 * beta.b_type2;
+			
+			var fh_cvd:Number = (profile.relativeHadCVD as Boolean) ? 1 : 0;
+			a += fh_cvd * beta.fh_cvd;
+			
+			var smok:Number = (profile.nonSmoker.value as Boolean) ? 0 : 1;
+			a += smok * beta.smok;
+			var snap1:Number = a;
+			
+			/* Sum from interaction terms */			
+			a += age_1 * b_AF * p.age_1.b_AF;
+			a += age_1 * b_renal * p.age_1.b_renal;
+			a += age_1 * b_treatedhyp * p.age_1.b_treatedhyp;
+			a += age_1 * b_type2 * p.age_1.b_type2;
+			a += age_1 * bmi_1 * p.age_1.bmi_1;
+			a += age_1 * fh_cvd * p.age_1.fh_cvd;
+			a += age_1 * sbp * p.age_1.sbp;
+			a += age_1 * smok * p.age_1.smok;
+			a += age_1 * town * p.age_1.town;
+			var snap2:Number = a;
+			
+			a += age_2 * b_AF * p.age_2.b_AF;
+			a += age_2 * b_renal * p.age_2.b_renal;
+			a += age_2 * b_treatedhyp * p.age_2.b_treatedhyp;
+			a += age_2 * b_type2 * p.age_2.b_type2;
+			a += age_2 * bmi_1 * p.age_2.bmi_1;
+			a += age_2 * fh_cvd * p.age_2.fh_cvd;
+			a += age_2 * sbp * p.age_2.sbp;
+			a += age_2 * smok * p.age_2.smok;
+			a += age_2 * town * p.age_2.town;
+	
+			//trace("\t"+snap0+" "+snap1+" "+snap2);			
+			return (1 - Math.pow(p.survivor[1], Math.exp(a)));
+		}
+	}	
+}
+
+class CalculatedParams {
+	public var a:Number;
+	public var a_int:Number;
+	public var genPop_a:Number
+	public var h:Number;
+	
+	function CalculatedParams(a:Number, a_int:Number, h:Number, genPop_a:Number)
+	{
+		this.a = a;
+		this.a_int = a_int;
+		this.h = h;
+		this.genPop_a = genPop_a;
+	}
+}

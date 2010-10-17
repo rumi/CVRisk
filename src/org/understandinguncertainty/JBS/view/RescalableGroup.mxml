@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/halo"
+		 resize="resize()"
+		>
+	
+	<fx:Script>
+		<![CDATA[
+			
+			/**
+			 * The aspect ratio required by the child container of this group
+			 */
+			[Bindable]
+			public var w_over_h:Number = 1;
+			
+			/**
+			 *  Values as low as 1 work, but shrinking only then works if you wiggle the window size as you shrink it.
+			 *  I think the issue is that you dont get enough resize events
+			 */
+			public var shrinkRate:int = 10;
+			
+			[Bindable]
+			public var niceWidth:Number;
+			
+			[Bindable]
+			public var niceHeight:Number;
+			
+			public function resize():void
+			{
+				var w1:int = height * w_over_h;
+				var h1:int = width / w_over_h;
+				
+				if(width < w1) {
+					niceWidth = width - shrinkRate;
+					niceHeight = niceWidth/w_over_h;
+				}
+				else {
+					niceHeight = height  - shrinkRate;
+					niceWidth = niceHeight * w_over_h;
+				}
+
+			}
+		]]>
+	</fx:Script>
+	
+</s:Group>

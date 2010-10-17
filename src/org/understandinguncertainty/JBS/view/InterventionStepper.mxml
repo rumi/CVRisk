@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/halo" 
+		 xmlns:ns="library://ns.adobe.com/flex/mx"
+		 addedToStage="changed()">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<s:SolidColorStroke id="stroke" color="0" weight="1" alpha="1"/>
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import org.understandinguncertainty.JBS.model.RunModel;
+			import org.understandinguncertainty.JBS.signals.InterventionEditedSignal;
+			import org.understandinguncertainty.JBS.signals.InterventionResetSignal;
+			
+			[Bindable]
+			public var label:String;
+						
+			private var _original:Number = 0;
+			[Bindable]
+			public function get original():Number
+			{
+				return _original;
+			}	
+			public function set original(n:Number):void
+			{
+				_original = n;
+//				if(id=="hdlc")
+//					trace("original = "+n);
+				value = n;
+				invalidateProperties();
+			}
+			
+			public function get value():Number
+			{
+				return stepper.value;
+			}
+			public function set value(n:Number):void
+			{
+//				if(id=="hdlc")
+//					trace("value = "+n);
+				stepper.value = n;
+				invalidateProperties();
+			}
+			
+			[Bindable]
+			public function get minimum():Number 
+			{
+				return stepper.minimum;
+			}
+			public function set minimum(v:Number):void
+			{
+				stepper.minimum = v;
+			}
+			
+			[Bindable]
+			public function get maximum():Number 
+			{
+				return stepper.maximum;
+			}
+			public function set maximum(v:Number):void
+			{
+				stepper.maximum = v;
+			}
+			
+			
+			private var _sigma:Number = 10;
+			[Bindable]
+			public function get sigma():Number
+			{
+				return _sigma;
+			}
+			public function set sigma(n:Number):void
+			{
+				_sigma = n;
+				invalidateProperties();
+			}
+			
+			public var editSignal:InterventionEditedSignal;
+			public var resetSignal:InterventionResetSignal;
+			
+			private function reset():void
+			{
+				stepper.value = original;
+				changed();
+			}
+			
+			private function changed():void
+			{
+				editSignal.dispatch(id);
+			}
+			
+			override protected function commitProperties():void
+			{
+//				if(id=="hdlc")
+//					trace("stepper.value="+stepper.value);
+				stepper.stepSize = stepSize;
+				stepper.validateNow();
+//				if(id=="hdlc")
+//					trace("stepper.value="+stepper.value);
+			}
+			
+			private function roundValue(v:Number):String
+			{
+//				if(id=="hdlc")
+//					trace("rounding " + v + " to " + v.toPrecision(3));
+				return v.toPrecision(3);
+			}
+			
+			public function get stepSize():Number {
+//				if(id=="hdlc")
+//					trace("stepSize = " + Math.pow(10, Math.floor(Math.log(stepper.value)*Math.LOG10E)-2));
+				return Math.pow(10, Math.floor(Math.log(stepper.value)*Math.LOG10E)-2);
+			}
+						
+		]]>
+	</fx:Script>
+	
+<!--	minimum="{original-3*sigma}" 
+	maximum="{original+3*sigma}" 
+-->	
+	<s:VGroup width="100%" gap="2">
+		<s:Label text="{label}"/>
+		<s:HGroup width="100%" verticalAlign="middle">
+
+			<s:Button id="before" label="{original}" width="50"
+					  enabled="{Math.abs(stepper.value - original) > 1e-8}"
+					  click="reset()" />
+			
+			<s:Label text="→" fontSize="14"/>
+			
+			
+			<!-- Note that the Spark NumericStepper is buggy in FB4. Setting the stepSize can cause the value to change. -->
+			<ns:NumericStepper id="stepper" width="50"
+							  change="changed()"/>
+
+			<!--
+			<s:Button 
+			stepSize="{Math.pow(10, Math.floor(Math.log(stepper.value)*Math.LOG10E)-2)}" 
+					  label="Reset" 
+					  width="60" 
+					  enabled="{stepper.value != original}"
+					  click="reset()" />
+			-->
+			
+		</s:HGroup>
+	</s:VGroup>
+
+</s:VGroup>

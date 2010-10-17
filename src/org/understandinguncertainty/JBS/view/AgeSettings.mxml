@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:HGroup xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 currentState="includeTargetAge"
+		 >
+	
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<s:states>
+		<s:State name="excludeTargetAge"/>
+		<s:State name="includeTargetAge"/>
+	</s:states>
+	
+	<fx:Script>
+		<![CDATA[
+			import org.understandinguncertainty.JBS.model.RunModel;
+			import org.understandinguncertainty.JBS.signals.InterventionEditedSignal;
+			import org.understandinguncertainty.JBS.signals.InterventionResetSignal;
+			import org.understandinguncertainty.JBS.signals.UpdateModelSignal;
+			
+			[Bindable]
+			[Inject]
+			public var runModel:RunModel;
+			
+			[Inject]
+			public var updateModelSignal:UpdateModelSignal;
+			
+			[Bindable]
+			[Inject]
+			public var interventionEditedSignal:InterventionEditedSignal;
+			
+			[Bindable]
+			[Inject]
+			public var interventionResetSignal:InterventionResetSignal;
+			
+			[Bindable]
+			public var minAge:int;
+			
+			[Bindable]
+			public var maxAge:int;
+			
+			public function update():void
+			{
+				runModel.interventionAge=interventionAgeStepper.value;
+				runModel.targetInterval = targetInterval.value;
+				updateModelSignal.dispatch();
+				invalidateDisplayList();
+			}
+
+		]]>
+	</fx:Script>
+	
+	<s:HGroup width="100%" verticalAlign="middle">
+		<s:NumericStepper id="interventionAgeStepper" value="{minAge}" minimum="{minAge}" maximum="{maxAge}" width="60"
+						  change="update()"/>
+		<s:Label text="Intervention Start Age" color="0x000000" />
+	</s:HGroup>
+	
+	<s:HGroup width="100%" verticalAlign="middle" visible="{currentState == 'includeTargetAge'}">
+		<s:NumericStepper id="targetInterval" value="10" minimum="0" maximum="{maxAge-minAge}" width="60"
+						  stepSize="5" 
+						  change="update()"/>
+		<s:Label text="Target Interval" color="0x000000" />
+	</s:HGroup>
+
+</s:HGroup>

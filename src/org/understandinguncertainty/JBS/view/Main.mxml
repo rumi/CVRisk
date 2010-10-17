@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/halo" 
+		 xmlns:view="org.understandinguncertainty.JBS.view.*" 
+		 xmlns:components="org.understandinguncertainty.JBS.view.components.*"
+		 xmlns:ns="library://ns.adobe.com/flex/mx">
+	<fx:Script>
+		<![CDATA[
+			import org.understandinguncertainty.JBS.service.Web;
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<s:SolidColor id="fill" color="0xffffff" alpha="1"/>
+	</fx:Declarations>
+	
+	<s:HGroup width="100%" paddingLeft="5" paddingTop="5" paddingRight="5" paddingBottom="5" >
+		<ns:Image id="uuicon" verticalAlign="middle" source="@Embed('assets/uuIcon.png')" />
+		<view:Header/>
+		<s:Group width="100%"/>
+<!--		<s:Button id="webButton" label="Web Site" click="Web.getURL('http://cvrisk.wordpress.com')"/>
+-->		<view:FullScreenButton id="fullScreen" buttonEnabled="false"/>
+	</s:HGroup>
+	
+	<s:VGroup width="100%" height="100%" gap="0">
+
+		<view:RescalableGroup id="thumbnails" w_over_h="7.64" width="100%" height="17%" >
+			<view:ScreenSelector id="screenSelector" mainPanel="{mainPanel}" 
+								 resizeMode="scale"
+								 width="{thumbnails.niceWidth}" height="{thumbnails.niceHeight}" />
+		</view:RescalableGroup>
+		
+		<ns:Spacer height="4%"/>
+		
+<!--		<view:RescalableGroup id="content" w_over_h = "1.9" width="100%" height="78%" >
+-->		<view:RescalableGroup id="content" w_over_h = "1.4" width="100%" height="78%" >
+			<s:VGroup width="{content.niceWidth}" height="{content.niceHeight}" 
+					  resizeMode="scale"
+					  verticalAlign="top"
+					  paddingLeft="10"
+					  gap="0" >
+
+				<view:MainPanel id="mainPanel"  />
+	
+			</s:VGroup>
+			
+		</view:RescalableGroup>
+
+	</s:VGroup>
+	
+<!-- vertical layout of thumbnails
+	
+	<s:HGroup width="100%" height="100%" top="20" right="120" verticalAlign="top" gap="10" >
+		<s:HGroup width="100%" height="100%" verticalAlign="middle">
+
+			<view:RescalableGroup id="selectorBox" w_over_h = "0.37" width="20%" height="100%">
+				
+				<view:ScreenSelector id="screenSelector" mainPanel="{mainPanel}" resizeMode = "scale"
+									 width="{selectorBox.niceWidth}" height="{selectorBox.niceHeight}" />
+				
+			</view:RescalableGroup>
+
+			<view:MainPanel id="mainPanel" 
+							width="80%" height="100%"/>
+
+		</s:HGroup>
+
+		<view:SidePanels top="{mainPanel.y+10}" right="5" visible="{screenSelector.sidePanelVisible}"/>
+
+</s:HGroup>-->
+	
+
+	
+</s:VGroup>

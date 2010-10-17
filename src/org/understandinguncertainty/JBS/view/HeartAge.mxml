@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<s:SolidColor id="green" color="0x44dd44"/>
+		<s:SolidColor id="yellow" color="0xffCC00"/>
+		<s:SolidColorStroke id="stroke" color="0" weight="0.5"/>
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			
+			import org.understandinguncertainty.JBS.model.RunModel;
+			import org.understandinguncertainty.JBS.signals.ModelUpdatedSignal;
+			import org.understandinguncertainty.JBS.signals.UpdateModelSignal;
+			
+			[Bindable]
+			[Inject]
+			public var runModel:RunModel;
+			
+			[Bindable]
+			public var meanAge:Number;
+			
+			[Bindable]
+			public var meanYears:Number;
+			
+			[Bindable]
+			public var yearGain:String;
+			
+			[Bindable]
+			public var survivalSummary:ArrayCollection;
+			
+			[Inject]
+			public var updateModelSignal:UpdateModelSignal;
+			
+			[Inject]
+			public var modelUpdatedSignal:ModelUpdatedSignal;
+			
+			public function addListeners():void
+			{
+				updateModelSignal.add(update);
+				modelUpdatedSignal.add(update2);
+			}
+			
+			public function removeListeners():void
+			{
+				updateModelSignal.remove(update);
+				modelUpdatedSignal.remove(update2);
+			}
+			
+			private function update():void
+			{
+				if(runModel) {
+					runModel.invalid = true;
+					invalidateProperties();
+				}
+			}
+
+			
+			[Bindable]
+			private var min:Number = 0;
+			
+			[Bindable]
+			private var max:Number = 100;
+			
+			private function update2():void
+			{
+				if(runModel.yearGain > 0) {
+					yearGain = runModel.yearGain.toPrecision(2);
+					gainText.visible = true;
+				}
+				else {
+					gainText.visible = false;
+				}
+				
+				meanAge = runModel.meanAge;
+				meanYears = Math.floor(meanAge);
+				
+				var yGain:Number = Math.max(0, runModel.yearGain);
+				survivalSummary = new ArrayCollection([{meanYears:runModel.meanAge - yGain, 
+					yearGain:yGain, 
+					summary:""}])
+				// trace("survival.meanYears="+survivalSummary[0].meanYears+" yearGain="+survivalSummary[0].yearGain);
+				min = runModel.age;
+				max = 5*Math.ceil((runModel.meanAge + 5)/5);
+				
+			}
+			
+			private function interventionChange(event:Event):void {
+				invalidateProperties();
+			}
+			
+			override protected function commitProperties() : void
+			{
+				if(runModel) {
+					runModel.invalid = true;
+					runModel.commitProperties();
+				}
+			}
+			
+		]]>
+	</fx:Script>
+	
+<!--	<s:HGroup  verticalAlign="middle" paddingLeft="40">
+-->		
+		<s:VGroup horizontalCenter="0" verticalCenter="0" horizontalAlign="left">
+			<s:HGroup verticalAlign="middle">
+				<mx:Image left="20" top="20" scaleX="0.4" scaleY="0.4" source="@Embed('assets/heartAge2.png')" id="heartImage"/>
+				<s:Label text="Your heart age is about" fontSize="18"/>
+				<s:Label text="{runModel.heartAgeText}" fontSize="18"/>
+			</s:HGroup>
+			<s:Group height="8"/>
+			<s:Label text="On average, expect to survive to age {meanYears}" fontSize="14"/>
+			<s:Label text="free of heart attack or stroke" fontSize="14"/>
+			<s:Label id="gainText" text="gaining {yearGain} years through interventions" fontSize="14"/>
+			
+			<mx:BarChart dataProvider="{survivalSummary}" type="stacked" height="50" seriesFilters="[]" barWidthRatio="0.9">
+				<mx:verticalAxis>
+					<mx:CategoryAxis id="vAxis" categoryField="summary"/>
+				</mx:verticalAxis>
+
+				<mx:horizontalAxis>
+					<mx:LinearAxis id="hAxis" minimum="{min}" maximum="{max}" /> 
+				</mx:horizontalAxis>
+				
+				<mx:horizontalAxisRenderers>
+					<mx:AxisRenderer axis="{hAxis}" showLine="false" styleName="myAxisStyles"/>
+				</mx:horizontalAxisRenderers>
+				
+				<mx:verticalAxisRenderers>
+					<mx:AxisRenderer axis="{vAxis}" showLine="false" styleName="myAxisStyles"/>
+				</mx:verticalAxisRenderers>
+				
+				<mx:series>
+					<mx:BarSeries  fill = "{green}" stroke="{stroke}" xField="meanYears" yField="summary" displayName = "expect remaining cv free years" />
+					<mx:BarSeries  fill = "{yellow}" stroke="{stroke}" xField="yearGain" yField="summary" displayName = "years gained" />
+				</mx:series>
+			</mx:BarChart>
+			<s:Label text="Expected heart attack or stroke free years remaining" fontSize="14"/>
+			
+		</s:VGroup>
+		
+<!--	</s:HGroup>
+-->
+</s:Group>
