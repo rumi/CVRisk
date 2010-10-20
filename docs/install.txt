@@ -1,0 +1,8 @@
+Installing CVRisk
+=================
+
+Download a disribution from github.com/rumi and move the unarchived distribution to a Flex Builder 4 
+workspace directory. In FB4, create a new Flex Prok=ject for the web, giving CVRisk as the name of
+the project and selecting the downloaded distribution as the project folder.
+
+You may need to adjust the project file to achieve a clean compiltion.
