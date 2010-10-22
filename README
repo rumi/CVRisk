@@ -1,10 +1,14 @@
 CVRisk
 ======
-CVRisk is a prototype of a cardiovascular risk calculator. It offers multiple ways of communicating risk. It includes a built in risk model based on Framingham.
+CVRisk is a prototype of a cardiovascular risk calculator. It offers multiple ways of communicating risk. It includes a built in risk model based on Framingham data.
 
-LICENCE
+DEMO
+====
+Visit http://understandinguncertainty.org/cvrisk
+
+LICENSE
 =======
-See http://github.com/rumi/CVRisk/License.html. 
+See License.html
 
 COPYRIGHT
 =========
@@ -24,7 +28,7 @@ This work builds on the following third party libraries:
 
 AS3-Signals by Robert Penner at http://github.com/robertpenner/as3-signals. 
 Robotlegs framework by contributors to http://www.robotlegs.org at http://github.com/robotlegs/robotlegs-framework. 
-Signals-extensions-CommandSignal by Joel Hools at http://github.com/joelhooks/signals-extensions-CommandSignal.
+Signals-extensions-CommandSignal by Joel Hooks at http://github.com/joelhooks/signals-extensions-CommandSignal.
 SwiftSuspenders by Till Schneidereit http://github.com/tschneidereit/SwiftSuspenders
 
 Compiled '.swc' versions of these libraries are included in this distribution in case future revisions introduce incompatibilities.
@@ -35,4 +39,16 @@ The project is a Flex Builder 4 project. To compile, download the distribution a
 using the distribution folder as the project folder. The sources may also be compiled using the free Adobe FLEX SDK from
 http://www.adobe.com/cfusion/entitlement/index.cfm?e=flex4sdk
 
-<a rel="license" href="http://creativecommons.org/licenses/by/2.0/uk/"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by/2.0/uk/88x31.png" /></a><br /><span xmlns:dct="http://purl.org/dc/terms/" href="http://purl.org/dc/dcmitype/InteractiveResource" property="dct:title" rel="dct:type">CVRisk</span> by <a xmlns:cc="http://creativecommons.org/ns#" href="http://understandinguncertainty.org" property="cc:attributionName" rel="cc:attributionURL">David Spiegelhalter and Mike Pearson</a> is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/2.0/uk/">Creative Commons Attribution 2.0 UK: England & Wales License</a>.<br />Based on a work at <a xmlns:dct="http://purl.org/dc/terms/" href="http://github.com/rumi/CVRisk" rel="dct:source">github.com</a>.
+If you have compilation problems, open Project Properties and check that
+(1) locale/en_US is declared as an extra source folder
+(2) Pathnames are correct - the distribution was built on a Mac/Unix filestore and some adjustments may be necessary for Windows.
+
+SAMPLE FILES
+============
+The src folder contains a number of sample xml files which may be loaded into the Profile screen.
+
+USAGE
+=====
+Launch the animation in a web browser. On the Profile screen, fill in your personal data. 
+You may save your personal data to your local disk for later use. Once valid data is available
+on the Profile screen, the output screens will be enabled.
