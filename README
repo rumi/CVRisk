@@ -1,0 +1,38 @@
+CVRisk
+======
+CVRisk is a prototype of a cardiovascular risk calculator. It offers multiple ways of communicating risk. It includes a built in risk model based on Framingham.
+
+LICENCE
+=======
+See http://github.com/rumi/CVRisk/License.html. 
+
+COPYRIGHT
+=========
+The copyright holder is the University of Cambridge
+
+AUTHORS
+=======
+David Spiegelhalter and Mike Pearson
+
+ATTRIBUTION
+===========
+If you republish or rework this calculator please provide a link back to http://github.com/rumi/CVRisk.
+
+DEPENDENCIES
+============
+This work builds on the following third party libraries:
+
+AS3-Signals by Robert Penner at http://github.com/robertpenner/as3-signals. 
+Robotlegs framework by contributors to http://www.robotlegs.org at http://github.com/robotlegs/robotlegs-framework. 
+Signals-extensions-CommandSignal by Joel Hools at http://github.com/joelhooks/signals-extensions-CommandSignal.
+SwiftSuspenders by Till Schneidereit http://github.com/tschneidereit/SwiftSuspenders
+
+Compiled '.swc' versions of these libraries are included in this distribution in case future revisions introduce incompatibilities.
+
+LANGUAGE
+========
+The project is a Flex Builder 4 project. To compile, download the distribution and create a new Flex Web Project 
+using the distribution folder as the project folder. The sources may also be compiled using the free Adobe FLEX SDK from
+http://www.adobe.com/cfusion/entitlement/index.cfm?e=flex4sdk
+
+<a rel="license" href="http://creativecommons.org/licenses/by/2.0/uk/"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by/2.0/uk/88x31.png" /></a><br /><span xmlns:dct="http://purl.org/dc/terms/" href="http://purl.org/dc/dcmitype/InteractiveResource" property="dct:title" rel="dct:type">CVRisk</span> by <a xmlns:cc="http://creativecommons.org/ns#" href="http://understandinguncertainty.org" property="cc:attributionName" rel="cc:attributionURL">David Spiegelhalter and Mike Pearson</a> is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/2.0/uk/">Creative Commons Attribution 2.0 UK: England & Wales License</a>.<br />Based on a work at <a xmlns:dct="http://purl.org/dc/terms/" href="http://github.com/rumi/CVRisk" rel="dct:source">github.com</a>.
