@@ -1,6 +1,7 @@
 CVRisk
 ======
-CVRisk is a prototype of a cardiovascular risk calculator. It offers multiple ways of communicating risk. It includes a built in risk model based on Framingham data.
+CVRisk is a prototype of a cardiovascular risk calculator. It offers multiple ways of communicating risk. 
+It includes a built in risk model based on Framingham data.
 
 DEMO
 ====
@@ -27,21 +28,24 @@ DEPENDENCIES
 This work builds on the following third party libraries:
 
 AS3-Signals by Robert Penner at http://github.com/robertpenner/as3-signals. 
-Robotlegs framework by contributors to http://www.robotlegs.org at http://github.com/robotlegs/robotlegs-framework. 
+Robotlegs framework from http://www.robotlegs.org at http://github.com/robotlegs/robotlegs-framework. 
 Signals-extensions-CommandSignal by Joel Hooks at http://github.com/joelhooks/signals-extensions-CommandSignal.
 SwiftSuspenders by Till Schneidereit http://github.com/tschneidereit/SwiftSuspenders
 
-Compiled '.swc' versions of these libraries are included in this distribution in case future revisions introduce incompatibilities.
+Compiled '.swc' versions of these libraries are included in this distribution in case future revisions
+introduce incompatibilities.
 
 LANGUAGE
 ========
-The project is a Flex Builder 4 project. To compile, download the distribution and create a new Flex Web Project 
-using the distribution folder as the project folder. The sources may also be compiled using the free Adobe FLEX SDK from
+This is a Flash Builder 4 project web project written in actionscript and mxml. 
+To compile, download the distribution and create a new Flex Web Project using the distribution folder as
+the project folder. The sources may also be compiled using the free Adobe FLEX SDK from
 http://www.adobe.com/cfusion/entitlement/index.cfm?e=flex4sdk
 
 If you have compilation problems, open Project Properties and check that
 (1) locale/en_US is declared as an extra source folder
-(2) Pathnames are correct - the distribution was built on a Mac/Unix filestore and some adjustments may be necessary for Windows.
+(2) Pathnames are correct - the distribution was built on a Mac/Unix filestore and some adjustments may be 
+necessary for Windows.
 
 SAMPLE FILES
 ============
