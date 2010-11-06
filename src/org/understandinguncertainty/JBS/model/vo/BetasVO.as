@@ -11,7 +11,6 @@ package org.understandinguncertainty.JBS.model.vo
 		public var smoker:Number;
 		public var diabetic:Number;
 		
-		// qrisk betas
 		public var age_1:Number;
 		public var age_2:Number;
 		public var bmi_1:Number;

@@ -207,9 +207,6 @@ package org.understandinguncertainty.JBS.model
 			
 			for(var i:int=age; i <= _maximumAge; i++) {
 				
-//				var calculatedParams:CalculatedParams 
-//					= (selectedModel == "framingham") ? calculateFramingham(i) : calculateQRisk(i);
-
 				var calculatedParams:CalculatedParams = calculateFramingham(i);
 				
 				a = calculatedParams.a;
