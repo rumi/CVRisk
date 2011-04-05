@@ -27,9 +27,6 @@ package org.understandinguncertainty.JBS.view
 		[Inject]
 		public var profile:Profile;
 		
-		[Inject(name='includeQRisk')]
-		public var includeQRisk:Boolean;
-		
 		[Inject]
 		public var profileLoadSignal:ProfileLoadSignal;
 		
@@ -62,7 +59,6 @@ package org.understandinguncertainty.JBS.view
 		{
 			trace("Profile Register");
 			ps = userProfile.personalData;
-			profile.currentState = includeQRisk ? "includeQRisk" : "normal";
 			profile.resized();
 			addEventListeners();
 			loadFromURL();
@@ -102,16 +98,7 @@ package org.understandinguncertainty.JBS.view
 		{
 			trace("New model = " + profile.model.selectedValue);
 			runModel.selectedModel = profile.model.selectedValue as String;
-			if(profile.model.selectedValue=="framingham") {
-				profile.qriskEnabled = false;
-				profile.qriskAlpha = 0.5;
-				profile.dateValidator.isFramingham = true;
-			}
-			else {
-				profile.qriskEnabled = true;
-				profile.qriskAlpha = 1;
-				profile.dateValidator.isFramingham = false;
-			}
+			profile.dateValidator.isFramingham = true;
 		}
 		
 		//
@@ -138,19 +125,6 @@ package org.understandinguncertainty.JBS.view
 			profile.systolicBloodPressure = Number(pvars.systolicBloodPressure);
 			profile.SBPTreated.selected = pvars.SBPTreated.value;
 			
-			// additional qrisk2 parameters
-			if(includeQRisk) {
-				profile.height_m.text = pvars.height_m.toString();
-				profile.weight_kg.text = pvars.weight_kg.toString();
-				profile.chronicRenalDisease.selected = pvars.chronicRenalDisease.value;
-				profile.atrialFibrillation.selected = pvars.atrialFibrillation.value;
-				profile.rheumatoidArthritis.selected = pvars.rheumatoidArthritis.value;		
-				profile.familyHistory.selected = pvars.relativeHadCVD.value;
-				profile.ethnicity.selectedIndex = pvars.ethnicGroup.value;
-				//profile.postcode.text = pvars.postCode.toString();
-				profile.townsend.text = pvars.townsend.toString();
-			}
-			
 			profile.validate();
 			
 		}
@@ -171,18 +145,7 @@ package org.understandinguncertainty.JBS.view
 			pvars.totalCholesterol_mmol_L.value = profile.totalCholesterol_mmol_L;
 			pvars.systolicBloodPressure.value = profile.systolicBloodPressure;
 			pvars.SBPTreated.value = profile.SBPTreated.selected;
-			
-			// additional qrisk2 parameters
-			if(includeQRisk) {
-				pvars.height_m.fromString(profile.height_m.text);
-				pvars.weight_kg.fromString(profile.weight_kg.text);
-				pvars.chronicRenalDisease.value = profile.chronicRenalDisease.selected;
-				pvars.atrialFibrillation.value = profile.atrialFibrillation.selected
-				pvars.rheumatoidArthritis.value = profile.rheumatoidArthritis.selected;
-				pvars.relativeHadCVD.value = profile.familyHistory.selected;
-				pvars.ethnicGroup.value = profile.ethnicity.selectedIndex == 0 ? 1 : profile.ethnicity.selectedIndex;			
-				pvars.townsend.fromString(profile.townsend.text);
-			}			
+	
 			
 			userProfile.isValid = false;
 		}

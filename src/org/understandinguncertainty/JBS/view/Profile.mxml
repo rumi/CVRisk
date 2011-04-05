@@ -43,9 +43,6 @@
 
 
 			private function setup():void {
-				//currentState = includeQRisk ?  'includeQRisk' : 'normal' ;				
-				//trace("Include QRisk = " + includeQRisk + " state="+currentState);
-
 				validate();
 				//mmol_L = resources.getString("JBS","units.mmol_L");
 				//mg_dL = resources.getString("JBS","units.mg_dL");
@@ -56,9 +53,7 @@
 				totalCholUnits.selectedIndex = 0;
 				hdlCholUnits.selectedIndex = 0;
 				runModel.mmol = (cholesterolUnit == mmol_L);
-				
-				// Add in QRisk form itemsif they are needed
-				
+								
 			}
 					
 			public function resized():void
@@ -72,17 +67,7 @@
 				var e2:Boolean = (totalCholValidator.validate().results != null);
 				var e3:Boolean = (dateValidator.validate().results != null)
 				var e4:Boolean = (sbpValidator.validate().results != null);
-				if(currentState == "includeQRisk") {
-					var e5:Boolean = (heightValidator.validate().results != null);
-					var e6:Boolean = (weightValidator.validate().results != null);
-					var e7:Boolean = (townsendValidator.validate().results != null);
-					updateCholesterolRatio();
-					updateBMI();
-				}
-				else {
-					e5 = e6 = e7 = false;
-				}
-				if(e1 || e2 || e3 || e4 || e5 || e6 || e7) {
+				if(e1 || e2 || e3 || e4 ) {
 					isValid = false;
 					profileValidSignal.dispatch(false);
 				}
@@ -234,28 +219,12 @@
 			
 			private function updateBMI():void
 			{
-				metres = Number(height_m.text);
-				var ft:Number = metres * 3.2808399 + 1/24; // the 1/24 is so 11.5 inches rounds up
-				feet = Math.floor(ft);
-				inches = Math.round((ft - feet)*12);
-				kg = Number(weight_kg.text);
-				var st:Number = kg * 0.157473044 + 1/28;
-				stones = Math.floor(st);
-				pounds = Math.round((st - stones)*14);
-				lbs = Math.round(kg * 2.20462262);
-				bmi = kg/(metres * metres);
 			}
 			
 			
 			private function changed():void {
 				validate();
 			}
-			
-			[Bindable]
-			public var qriskEnabled:Boolean;
-			
-			[Bindable]
-			public var qriskAlpha:Number = 0.5;
 			
 			public function get systolicBloodPressure():Number
 			{
@@ -276,7 +245,6 @@
 	</fx:Script>
 	<s:states>
 		<s:State name="normal"/>
-		<s:State name="includeQRisk"/>
 	</s:states>
 	
 	<fx:Declarations>
@@ -299,9 +267,6 @@
 		<ns:NumberValidator id="totalCholValidator" minValue="{cholesterolFactor}" maxValue="{20*cholesterolFactor}" required="true" source="{totalCholesterolInput}" property="text"/>
 		<ns:NumberValidator id="hdlCholValidator" minValue="{0.1*cholesterolFactor}" maxValue="{12*cholesterolFactor}" required="true" source="{hdlCholesterolInput}" property="text"/>
 		<ns:NumberValidator id="sbpValidator" minValue="{70}" maxValue="{210}" required="true" source="{systolicBloodPressureInput}" property="text"/>
-		<ns:NumberValidator id="heightValidator" minValue="{0.5}" maxValue="{4}" required="false" source="{height_m}" property="text"/>
-		<ns:NumberValidator id="weightValidator" minValue="{Math.max(5,15*metres*metres)}" maxValue="{Math.min(200,50*metres*metres)}" required="false" source="{weight_kg}" property="text"/>
-		<ns:NumberValidator id="townsendValidator" minValue="{-7}" maxValue="{12}" required="false" source="{townsend}" property="text"/>
 	</fx:Declarations>
 		
 <!--	<s:Group width="440" height="450" >
@@ -335,18 +300,7 @@
 					</s:HGroup>
 					
 					<s:Group height="8"/>
-					
 										
-					<s:Group height="100%" includeIn="includeQRisk"/>
-					
-					<s:VGroup width="100%" verticalAlign="bottom"  includeIn="includeQRisk">
-						<s:Label text="@Resource(bundle='JBS', key='profile.model')" fontWeight="normal" fontSize="10"/>
-						<s:HGroup>
-							<s:RadioButton label="@Resource(bundle='JBS', key='profile.model.framingham')" fontSize="10" groupName="model" value="framingham" selected="true" />
-							<s:RadioButton label="QRISK®2" fontSize="10" groupName="model" value="qrisk2" />
-						</s:HGroup>
-					</s:VGroup>
-					
 				</s:VGroup>
 				
 				<s:VGroup >
@@ -365,13 +319,7 @@
 						<ns:ComboBox id="hdlCholUnits" width="70" selectedIndex="0" change="changedUnits(event)" labelField="unit" dataProvider="{cholUnitFactors}"/>
 					</s:HGroup>
 					
-					<s:HGroup width="100%" verticalAlign="middle" includeIn="includeQRisk">
-						<s:Group width="100%"/>
-						<s:Label text="@Resource(bundle='JBS', key='sideBar2.cholRatio')" />
-						<s:Label id="cholRatioLabel" text="{cholesterolRatio.toFixed(1)}" />
-						<s:Group width="87"/>
-					</s:HGroup>
-					
+				
 					<s:Group height="8"/>
 					
 					<s:HGroup width="100%" verticalAlign="middle"  toolTip="{tipPlaceHolder}">
@@ -411,81 +359,6 @@
 						<s:CheckBox id="active"/>
 					</s:HGroup>
 													
-					<s:VGroup id="qriskExtras" width="100%" horizontalAlign="right" includeIn="includeQRisk">
-						
-						<s:HGroup width="100%" verticalAlign="middle"  toolTip="{tipPlaceHolder}">
-							<s:Group width="100%"/>
-							<s:Label text="@Resource(bundle='JBS', key='profile.entry.height')" fontWeight="normal" alpha="{qriskAlpha}"/>
-							<s:TextInput id="height_m" editable="true" text="" width="40" change="changed()" enabled="{qriskEnabled}"  includeIn="includeQRisk"/>
-							<s:Label text="@Resource(bundle='JBS', key='units.m')" alpha="{qriskAlpha}"/>
-							<s:Group width="5"/>
-							<s:Label text="{'('+feet+'ft '+inches+'in)'}" alpha="{qriskAlpha}"/>
-							<s:Label text="@Resource(bundle='JBS', key='units.ft')" alpha="{qriskAlpha}"/>
-							<s:Group width="10"/>
-							<s:Label text="@Resource(bundle='JBS', key='profile.entry.weight')" fontWeight="normal" alpha="{qriskAlpha}"/>
-							<s:TextInput id="weight_kg" editable="true" text="" width="40" change="changed()" enabled="{qriskEnabled}"/>
-							<s:Label text="@Resource(bundle='JBS', key='units.kg')" alpha="{qriskAlpha}"/>
-							<s:Group width="5"/>
-							<s:Label text="{'('+stones+'st '+pounds+' lb = '+lbs+' lb)'}" alpha="{qriskAlpha}"/>
-							<s:Group width="5"/>
-							<s:Label text="{'BMI = '+bmi.toPrecision(3)}" alpha="{qriskAlpha}"/>
-						</s:HGroup>
-											
-						<s:HGroup width="100%" verticalAlign="bottom">
-							<s:Group width="100%"/>
-							<s:Label text="@Resource(bundle='JBS', key='profile.qrisk.familyhistory')" fontWeight="normal" alpha="{qriskAlpha}"/>
-							<s:CheckBox id="familyHistory" enabled="{qriskEnabled}"/>
-						</s:HGroup>
-						
-						<s:HGroup width="100%" verticalAlign="bottom"  toolTip="{tipPlaceHolder}">
-							<s:Group width="100%"/>   
-							<s:Label text="@Resource(bundle='JBS', key='profile.qrisk.ethnicity')" fontWeight="normal" alpha="{qriskAlpha}"/>
-							<s:DropDownList id="ethnicity" width="170" selectedIndex="0" change="changed()" enabled="{qriskEnabled}">
-								<s:ArrayList>
-									<fx:String>@Resource(bundle='JBS', key='ethnicity.0')</fx:String>
-									<fx:String>@Resource(bundle='JBS', key='ethnicity.1')</fx:String>
-									<fx:String>@Resource(bundle='JBS', key='ethnicity.2')</fx:String>
-									<fx:String>@Resource(bundle='JBS', key='ethnicity.3')</fx:String>
-									<fx:String>@Resource(bundle='JBS', key='ethnicity.4')</fx:String>
-									<fx:String>@Resource(bundle='JBS', key='ethnicity.5')</fx:String>
-									<fx:String>@Resource(bundle='JBS', key='ethnicity.6')</fx:String>
-									<fx:String>@Resource(bundle='JBS', key='ethnicity.7')</fx:String>
-									<fx:String>@Resource(bundle='JBS', key='ethnicity.8')</fx:String>
-									<fx:String>@Resource(bundle='JBS', key='ethnicity.9')</fx:String>
-								</s:ArrayList>
-							</s:DropDownList>
-						</s:HGroup>
-						
-						<s:HGroup width="100%" verticalAlign="bottom">
-							<s:Group width="100%"/>
-							<s:Label text="@Resource(bundle='JBS', key='profile.qrisk.atrialFibrillation')" fontWeight="normal" alpha="{qriskAlpha}"/>
-							<s:CheckBox id="atrialFibrillation" enabled="{qriskEnabled}"/>
-						</s:HGroup>
-						
-						<s:HGroup width="100%" verticalAlign="bottom">
-							<s:Group width="100%"/>
-							<s:Label text="@Resource(bundle='JBS', key='profile.qrisk.rheumatoidArthritis')" fontWeight="normal" alpha="{qriskAlpha}"/>
-							<s:CheckBox id="rheumatoidArthritis" enabled="{qriskEnabled}"/>
-						</s:HGroup>
-						
-						<s:HGroup width="100%" verticalAlign="bottom">
-							<s:Group width="100%"/>
-							<s:Label text="@Resource(bundle='JBS', key='profile.qrisk.chronicRenalDisease')" fontWeight="normal" alpha="{qriskAlpha}"/>
-							<s:CheckBox id="chronicRenalDisease" enabled="{qriskEnabled}"/>
-						</s:HGroup>
-						
-						<s:HGroup width="100%" verticalAlign="middle"  toolTip="{tipPlaceHolder}">
-							<s:Group width="100%"/>
-							<!--
-							<s:Label text="@Resource(bundle='JBS', key='profile.qrisk.postcode')" fontWeight="normal" alpha="{qriskAlpha}"/>
-							<s:TextInput id="postcode" editable="true" text="" width="40" change="changed()" enabled="{qriskEnabled}"/>
-							-->
-							<s:Label text="@Resource(bundle='JBS', key='profile.qrisk.townsend')" fontWeight="normal" alpha="{qriskAlpha}"/>
-							<s:TextInput id="townsend" editable="true" text="0" width="40" change="changed()" enabled="{qriskEnabled}"/>
-						</s:HGroup>
-						
-						
-					</s:VGroup>
 					
 					<s:Group height="8"/>
 					

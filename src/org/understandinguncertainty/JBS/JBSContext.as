@@ -52,8 +52,6 @@ package org.understandinguncertainty.JBS
 	public class JBSContext extends SignalContext
 	{
 		
-		public var includeQRisk:Boolean = false;
-		
 		public function JBSContext(contextView:DisplayObjectContainer=null, autoStartup:Boolean=true)
 		{
 			super(contextView, autoStartup);
@@ -64,9 +62,6 @@ package org.understandinguncertainty.JBS
 			
 			// inject ResourceManager
 			injector.mapValue(IResourceManager, ResourceManager.getInstance());
-
-			// QRisk?
-			injector.mapValue(Boolean, includeQRisk, "includeQRisk");
 			
 			// Model
 			injector.mapSingleton(ConfigProxy);
